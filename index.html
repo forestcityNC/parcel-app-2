@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset=utf-8 />
+  <title>Forest City Parcel Viewer| Leaflet Vector Grid</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+  <!-- CSS -->
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
+  <link href= '/assets/css/leaflet-sidebar.min.css'rel='stylesheet' />
+  <link href= '/assets/css/leaflet-search.min.css'rel='stylesheet' />
+  <!-- JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/core.js" integrity="sha256-36hEPcG8mKookfvUVvEqRkpdYV1unP6wvxIqbgdeVhk=" crossorigin="anonymous"></script>
+  <!-- Leaflet related JS -->
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js"></script>
+  <script src="assets/js/leaflet-sidebar.min.js"></script>
+  <script src="assets/js/leaflet-search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js" integrity="sha256-k1l+ouvMXT+0iRA8pc8e0dge4ZeGjXG6imrvWboFTRE=" crossorigin="anonymous"></script>
+
+ <!-- tags for deed/tax links -->
+
+
+  <style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+			width: 600px;
+			height: 400px;
+		}
+	</style>
+
+	<style>body { padding: 0; margin: 0; } #map { height: 100%; width: 100vw; }</style>
+</head>
+
+
+<body>
+
+  <div id="map">
+
+</body>
+
+
+
+  <script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoiZGJoYXJyaXM5MiIsImEiOiJjamo1dm5hOGswOHMzM2tubm12OGhjdXdzIn0.MXeiHXd9767rehYZ2fBVHQ';
+
+  var map = L.map('map', {
+            //layers: [googleSat, sewerLines, waterLines]
+      }).setView([35.339744, -81.872195], 18);
+
+  // basemaps, added in L.control.panellayers  //
+
+  var ortho2019 = L.tileLayer.wms('https://services.nconemap.gov/secure/services/Imagery/Orthoimagery_2019/ImageServer/WMSServer?', {
+    maxZoom: 22,
+    layers: '0'
+  }).addTo(map);
+
+  var test = {};
+  map.createPane('parcelPane');
+  map.getPane('parcelPane').style.zIndex = 650;
+
+  var highlight;
+  var clearHighlight = function() {
+    if (highlight) {
+      vectorGrid.resetFeatureStyle(highlight);
+    }
+    highlight = null;
+  };
+
+  // begin parcels vectorTile //
+  var vectorGrid = L.vectorGrid.protobuf("https://b.tiles.mapbox.com/v4/dbharris92.aohxh3j0/{z}/{x}/{y}.vector.pbf?access_token=pk.eyJ1IjoiZGJoYXJyaXM5MiIsImEiOiJjamo1dm5hOGswOHMzM2tubm12OGhjdXdzIn0.MXeiHXd9767rehYZ2fBVHQ", {
+    pane: "parcelPane",
+    minZoom: 12,
+    maxNativeZoom: 22,
+    maxZoom: 22,
+    rendererFactory: L.canvas.tile,
+  	attribution: 'Forest City, Rutherford County',
+    interactive: true,
+    getFeatureId: function(feature) {
+      return feature.properties.PIN;
+    }
+  })
+  .on('click', function(e) {
+			var properties = e.layer.properties;
+      var dBook = properties.Deed_Book;
+      var dPage = properties.Deed_Page;
+      var deedLink = "http://cottweb.rutherfordcountync.gov/External/LandRecords/protected/v4/SrchBookPage.aspx?bAutoSearch=true&bk=" + dBook +  "&bks=&pg=" + dPage + "&pgs=&idx=CRP";
+      console.log(deedLink);
+			L.popup()
+				.setContent('<h4>' + properties.Property_O + '</h4>' +
+         properties.Zoning + '<br>'+
+         properties.PIN + '<br>'+
+         '<a href="'+ deedLink + '" target="_blank">Deed Search</a>'
+         )
+				.setLatLng(e.latlng)
+				.openOn(map);
+
+			clearHighlight();
+			highlight = properties.PIN;
+
+			var style = {
+				fillColor: 'white',
+				fillOpacity: 0.25,
+				stroke: true,
+				fill: true,
+				color: 'red',
+				opacity: 1,
+				weight: 2,
+			};
+
+			vectorGrid.setFeatureStyle(properties.PIN, style);
+		})
+	.addTo(map);
+ // end vector tiles //
+
+ // setup layer controls and overlays //
+ // var sidebar = L.control.sidebar('sidebar').addTo(map);
+  var layerControl = L.control.layers(null).addTo(map);
+  layerControl.addOverlay(vectorGrid, "Parcels");
+
+  var panelLayers = new L.Control.PanelLayers(baseLayers, overLayers, {
+    //compact: true,
+    //collapsed: true,
+        collapsibleGroups: true
+  });
+
+  // search addresses csv //
+  var search
+  var searchLayer = L.geoJson();
+
+  searchLayerData = omnivore.csv('data/addresses.csv', {
+    latfield: 'y_coord',
+    lonfield: 'x_coord'
+  }, searchLayer);
+
+  search = new L.Control.Search({
+      layer: searchLayer,
+      propertyName: 'full_addre',
+      initial: false,
+      circleLocation: true,
+      moveToLocation: function(latlng, title, map) {map.flyTo(latlng, 18)},
+      collapsed: false,
+      textPlaceholder: 'Search by Name or Parcel ID',
+      minLength: 2
+  }).addTo(map);
+  // end search //
+
+
+  </script>
+</body>
