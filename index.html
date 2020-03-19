@@ -91,13 +91,16 @@
 			var properties = e.layer.properties;
       var dBook = properties.Deed_Book;
       var dPage = properties.Deed_Page;
+      var pn = properties.Parcel_Num;
       var deedLink = "http://cottweb.rutherfordcountync.gov/External/LandRecords/protected/v4/SrchBookPage.aspx?bAutoSearch=true&bk=" + dBook +  "&bks=&pg=" + dPage + "&pgs=&idx=CRP";
-      console.log(deedLink);
+      var taxLink = "http://lrcpwa.ncptscloud.com/Rutherford/PropertySummary.aspx?PARCELPK=" + pn;
+      // console.log(deedLink);
+      console.log(taxLink);
 			L.popup()
 				.setContent('<h4>' + properties.Property_O + '</h4>' +
          properties.Zoning + '<br>'+
-         properties.PIN + '<br>'+
-         '<a href="'+ deedLink + '" target="_blank">Deed Search</a>'
+         '<a href="'+ deedLink + '" target="_blank">Deed Search</a>' + '<br>' +
+         '<a href="'+ taxLink + '" target="_blank">Property Tax Search</a>'
          )
 				.setLatLng(e.latlng)
 				.openOn(map);
