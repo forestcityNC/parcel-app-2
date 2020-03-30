@@ -3,7 +3,7 @@
 
 <head>
   <meta charset=utf-8 />
-  <title>Forest City Parcel Viewer| Leaflet Vector Grid</title>
+  <title>Forest City Parcel and Zoning Viewer </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
   <!-- CSS -->
@@ -11,14 +11,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
   <link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
   <link href= '/assets/css/leaflet-sidebar.min.css'rel='stylesheet' />
-  <link href= '/assets/css/leaflet-search.min.css'rel='stylesheet' />
+
   <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/core.js" integrity="sha256-36hEPcG8mKookfvUVvEqRkpdYV1unP6wvxIqbgdeVhk=" crossorigin="anonymous"></script>
   <!-- Leaflet related JS -->
   <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
   <script src="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js"></script>
-  <script src="assets/js/leaflet-sidebar.min.js"></script>
   <script src="assets/js/leaflet-search.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js" integrity="sha256-k1l+ouvMXT+0iRA8pc8e0dge4ZeGjXG6imrvWboFTRE=" crossorigin="anonymous"></script>
 
@@ -89,15 +88,16 @@
   })
   .on('click', function(e) {
 			var properties = e.layer.properties;
+      var owner = properties.Property_O
       var dBook = properties.Deed_Book;
       var dPage = properties.Deed_Page;
       var pn = properties.Parcel_Num;
       var deedLink = "http://cottweb.rutherfordcountync.gov/External/LandRecords/protected/v4/SrchBookPage.aspx?bAutoSearch=true&bk=" + dBook +  "&bks=&pg=" + dPage + "&pgs=&idx=CRP";
-      var taxLink = "http://lrcpwa.ncptscloud.com/Rutherford/PropertySummary.aspx?PARCELPK=" + pn;
+      var taxLink = "http://lrcpwa.ncptscloud.com/Rutherford/PropertySummary.aspx?PARCELPK=" + owner;
       // console.log(deedLink);
       console.log(taxLink);
 			L.popup()
-				.setContent('<h4>' + properties.Property_O + '</h4>' +
+				.setContent('<h4>' + owner + '</h4>' +
          properties.Zoning + '<br>'+
          '<a href="'+ deedLink + '" target="_blank">Deed Search</a>' + '<br>' +
          '<a href="'+ taxLink + '" target="_blank">Property Tax Search</a>'
