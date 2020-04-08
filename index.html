@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
   <link href='https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.css' rel='stylesheet' />
   <link href= '/assets/css/leaflet-sidebar.min.css'rel='stylesheet' />
+  <link href= '/assets/css/leaflet-search.min.css'rel='stylesheet' />
 
   <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/core.js" integrity="sha256-36hEPcG8mKookfvUVvEqRkpdYV1unP6wvxIqbgdeVhk=" crossorigin="anonymous"></script>
@@ -20,9 +21,7 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v1.7.0/mapbox-gl.js"></script>
   <script src="assets/js/leaflet-search.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js" integrity="sha256-k1l+ouvMXT+0iRA8pc8e0dge4ZeGjXG6imrvWboFTRE=" crossorigin="anonymous"></script>
-
- <!-- tags for deed/tax links -->
-
+  <script src="assets/js/leaflet.browser.print.min.js"></script>
 
   <style>
 		html, body {
@@ -93,7 +92,7 @@
       var dPage = properties.Deed_Page;
       var pn = properties.Parcel_Num;
       var deedLink = "http://cottweb.rutherfordcountync.gov/External/LandRecords/protected/v4/SrchBookPage.aspx?bAutoSearch=true&bk=" + dBook +  "&bks=&pg=" + dPage + "&pgs=&idx=CRP";
-      var taxLink = "http://lrcpwa.ncptscloud.com/Rutherford/PropertySummary.aspx?PARCELPK=" + owner;
+      var taxLink = "http://lrcpwa.ncptscloud.com/Rutherford/OwnerSearchResults.aspx?OwnerName=" + owner;
       // console.log(deedLink);
       console.log(taxLink);
 			L.popup()
@@ -113,7 +112,7 @@
 				fillOpacity: 0.25,
 				stroke: true,
 				fill: true,
-				color: 'red',
+				color: 'black',
 				opacity: 1,
 				weight: 2,
 			};
@@ -122,39 +121,55 @@
 		})
 	.addTo(map);
  // end vector tiles //
-
+    var basemaps = {
+   "2019 Satellite": ortho2019
+    };
+    var overlays = {
+      "Parcels" : vectorGrid
+    };
  // setup layer controls and overlays //
  // var sidebar = L.control.sidebar('sidebar').addTo(map);
-  var layerControl = L.control.layers(null).addTo(map);
-  layerControl.addOverlay(vectorGrid, "Parcels");
+    var layerControl = L.control.layers(basemaps, overlays).addTo(map);
 
-  var panelLayers = new L.Control.PanelLayers(baseLayers, overLayers, {
-    //compact: true,
-    //collapsed: true,
-        collapsibleGroups: true
-  });
 
-  // search addresses csv //
-  var search
-  var searchLayer = L.geoJson();
+    // search addresses csv //
+    var search
+    var searchLayer = L.geoJson();
 
-  searchLayerData = omnivore.csv('data/addresses.csv', {
-    latfield: 'y_coord',
-    lonfield: 'x_coord'
-  }, searchLayer);
+    searchLayerData = omnivore.csv('data/addresses.csv', {
+      latfield: 'y_coord',
+      lonfield: 'x_coord'
+    }, searchLayer);
 
-  search = new L.Control.Search({
-      layer: searchLayer,
-      propertyName: 'full_addre',
-      initial: false,
-      circleLocation: true,
-      moveToLocation: function(latlng, title, map) {map.flyTo(latlng, 18)},
-      collapsed: false,
-      textPlaceholder: 'Search by Name or Parcel ID',
-      minLength: 2
-  }).addTo(map);
-  // end search //
+    search = new L.Control.Search({
+        layer: searchLayer,
+        propertyName: 'full_addre',
+        initial: false,
+        moveToLocation: function(latlng, title, map) {map.flyTo(latlng, 19)},
+        collapsed: false,
+        textPlaceholder: 'Search by Name or Parcel ID',
+        minLength: 2
+    }).addTo(map);
+    // end search //
 
+    L.Control.BrowserPrint.Utils.registerLayer(
+    // Actual typeof object to compare with
+      L.VectorGrid.Protobuf,
+    // Any string you would like for current function for print events
+     "L.VectorGrid.Protobuf",
+      function(layer, utils) {
+        return new L.VectorGrid.Protobuf(layer._url, layer.options);
+      }
+   );
+
+    L.control
+      .browserPrint({
+        title: "Just print me!",
+        documentTitle: "Map printed using leaflet.browser.print plugin",
+        closePopupsOnPrint: false,
+        manualMode: false
+      })
+      .addTo(map);
 
   </script>
 </body>
